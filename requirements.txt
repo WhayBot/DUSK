@@ -1,0 +1,7 @@
+RPi.GPIO
+pigpio
+luma.oled
+adafruit-circuitpython-ina219
+python-vl53l0x
+mpu6050-raspberrypi
+numpy
