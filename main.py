@@ -3,6 +3,7 @@
 # By: WhayBot & Aquavivaaa
 # License: MIT
 
+import config
 import time
 import math
 import busio
