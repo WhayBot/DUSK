@@ -63,3 +63,6 @@ OLED_HEIGHT = 64             #Display height in pixels
 SENSOR_UPDATE_INTERVAL = 0.1 #Time between sensor readings (seconds)
 DISPLAY_UPDATE_INTERVAL = 0.5 #Time between display updates (seconds)
 PUMP_PULSE_DURATION = 300    #Water pump activation time (ms)
+
+#Disable UART
+enable_uart=0 
