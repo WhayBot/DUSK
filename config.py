@@ -22,8 +22,10 @@ ENCODER_LEFT_A = 14    #GPIO14 (TXD)
 ENCODER_LEFT_B = 15    #GPIO15 (RXD)
 ENCODER_RIGHT_A = 7    #GPIO7 (CE1)
 ENCODER_RIGHT_B = 8    #GPIO8 (CE0)
-PULSES_PER_REV = 20    #Jumlah pulsa per putaran roda
-WHEEL_DIAMETER = 6.5   #cm (diameter roda 65mm)
+PULSES_PER_REV = 20    #Sesuai jumlah lubang disk
+WHEEL_DIAMETER = 6.5   #cm (65mm)
+WHEEL_CIRCUMFERENCE = math.pi * WHEEL_DIAMETER  #~20.42 cm
+CM_PER_PULSE = WHEEL_CIRCUMFERENCE / PULSES_PER_REV  #~1.021 cm/pulse
 
 #Brushless Motor Control
 ESC_PWM = 18                 #PWM signal pin for ESC (controls brushless motor)
