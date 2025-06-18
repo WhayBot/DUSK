@@ -17,6 +17,14 @@ MOTOR_R_IN2 = 16             #L298N IN4 for right motor direction
 MOTOR_L_ENA = 10             #L298N ENA (PWM for left motor speed)
 MOTOR_R_ENB = 9              #L298N ENB (PWM for right motor speed)
 
+# === WHEEL ENCODER CONFIG ===
+ENCODER_LEFT_A = 14    #GPIO14 (TXD)
+ENCODER_LEFT_B = 15    #GPIO15 (RXD)
+ENCODER_RIGHT_A = 7    #GPIO7 (CE1)
+ENCODER_RIGHT_B = 8    #GPIO8 (CE0)
+PULSES_PER_REV = 20    #Jumlah pulsa per putaran roda
+WHEEL_DIAMETER = 6.5   #cm (diameter roda 65mm)
+
 #Brushless Motor Control
 ESC_PWM = 18                 #PWM signal pin for ESC (controls brushless motor)
 
