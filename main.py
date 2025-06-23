@@ -360,7 +360,7 @@ class DUSKController:
             self.mode = "CHARGING"
     
     def draw_eye(self, device, is_left_eye, state="open", offset_x=0, offset_y=0):
-        """Menggambar mata dengan detail pada OLED"""
+        """Eye Mechanism by Deepseek"""
         with canvas(device) as draw:
             # Koordinat dan ukuran mata
             center_x = device.width // 2
@@ -459,7 +459,7 @@ class DUSKController:
                           offset_x=self.eye_offset_x, offset_y=self.eye_offset_y)
 
     def emergency_stop(self):
-        """Fungsi darurat menghentikan semua motor"""
+        """Emergency to stop all the motors"""
         self.set_motor_speed(0, 0)
         self.set_vacuum(False)
         self.set_sweeper(False)
@@ -469,7 +469,7 @@ class DUSKController:
         GPIO.output(config.MOTOR_SWEEPER_IN2, GPIO.LOW)
         pi.hardware_PWM(config.MOTOR_SWEEPER_ENA, 1000, 0)
 
-# ===== MAIN LOOP =====
+#main loop
 if __name__ == "__main__":
     robot = DUSKController()
     last_sensor_update = time.time()
