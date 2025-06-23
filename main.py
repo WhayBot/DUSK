@@ -68,10 +68,9 @@ vl53_left, vl53_right = init_vl53l0x()
 # Setup GPIO Aktuator
 GPIO.setup([
     config.IR_RECEIVER_LEFT, config.IR_RECEIVER_RIGHT,
-    config.RELAY_VACUUM, config.RELAY_SWEEPER, 
-    config.RELAY_MOP, config.RELAY_PUMP,
     config.MOTOR_L_IN1, config.MOTOR_L_IN2,
-    config.MOTOR_R_IN1, config.MOTOR_R_IN2
+    config.MOTOR_R_IN1, config.MOTOR_R_IN2,
+    config.MOTOR_SWEEPER_IN1, config.MOTOR_SWEEPER_IN2
 ], GPIO.OUT)
 
 # Setup GPIO Encoder
@@ -83,6 +82,10 @@ pi.set_mode(config.MOTOR_L_ENA, pigpio.OUTPUT)
 pi.set_mode(config.MOTOR_R_ENB, pigpio.OUTPUT)
 pi.set_PWM_frequency(config.MOTOR_L_ENA, 1000)  # 1 kHz
 pi.set_PWM_frequency(config.MOTOR_R_ENB, 1000)
+
+# Setup PWM untuk motor penyapu (L298N kedua)
+pi.set_mode(config.MOTOR_SWEEPER_ENA, pigpio.OUTPUT)
+pi.set_PWM_frequency(config.MOTOR_SWEEPER_ENA, 1000)  # 1 kHz
 
 # ESC Calibration
 try:
@@ -98,7 +101,6 @@ class DUSKController:
         self.battery_low = False
         self.docking_found = False
         self.clean_pattern = "ZIGZAG"
-        self.water_level = config.WATER_TANK_CAPACITY  # mL
         
         # Variabel animasi mata
         self.last_blink_time = time.time()
@@ -222,24 +224,24 @@ class DUSKController:
         pi.hardware_PWM(config.MOTOR_R_ENB, 1000, right_duty)
     
     def set_vacuum(self, state):
-        GPIO.output(config.RELAY_VACUUM, GPIO.HIGH if state else GPIO.LOW)
+        """Kontrol motor vakum melalui ESC"""
         if state:
             pi.set_servo_pulsewidth(config.ESC_PWM, config.VACUUM_POWER)  # Full speed
+        else:
+            pi.set_servo_pulsewidth(config.ESC_PWM, 0)  # Matikan
     
     def set_sweeper(self, state):
-        GPIO.output(config.RELAY_SWEEPER, GPIO.HIGH if state else GPIO.LOW)
-    
-    def set_mop(self, state):
-        GPIO.output(config.RELAY_MOP, GPIO.HIGH if state else GPIO.LOW)
-    
-    def set_water_pump(self, duration_ms):
-        if self.water_level <= 0:
-            return  # Stop jika air habis
-            
-        GPIO.output(config.RELAY_PUMP, GPIO.HIGH)
-        time.sleep(duration_ms / 1000.0)
-        GPIO.output(config.RELAY_PUMP, GPIO.LOW)
-        self.water_level -= duration_ms * config.PUMP_FLOW_RATE
+        """Kontrol motor penyapu melalui L298N kedua"""
+        if state:
+            # Putaran maju
+            GPIO.output(config.MOTOR_SWEEPER_IN1, GPIO.HIGH)
+            GPIO.output(config.MOTOR_SWEEPER_IN2, GPIO.LOW)
+            # Kecepatan penuh
+            pi.hardware_PWM(config.MOTOR_SWEEPER_ENA, 1000, 10000)  # 100% duty cycle
+        else:
+            GPIO.output(config.MOTOR_SWEEPER_IN1, GPIO.LOW)
+            GPIO.output(config.MOTOR_SWEEPER_IN2, GPIO.LOW)
+            pi.hardware_PWM(config.MOTOR_SWEEPER_ENA, 1000, 0)  # Matikan PWM
     
     def zigzag_navigation(self):
         """Pola navigasi zigzag dengan koreksi IMU"""
@@ -474,8 +476,11 @@ class DUSKController:
         self.set_motor_speed(0, 0)
         self.set_vacuum(False)
         self.set_sweeper(False)
-        self.set_mop(False)
-        GPIO.output(config.RELAY_PUMP, GPIO.LOW)
+        
+        # Pastikan semua pin motor penyapu dimatikan
+        GPIO.output(config.MOTOR_SWEEPER_IN1, GPIO.LOW)
+        GPIO.output(config.MOTOR_SWEEPER_IN2, GPIO.LOW)
+        pi.hardware_PWM(config.MOTOR_SWEEPER_ENA, 1000, 0)
 
 # ===== MAIN LOOP =====
 if __name__ == "__main__":
@@ -502,13 +507,10 @@ if __name__ == "__main__":
             # Mode Operasi
             if robot.mode == "CLEANING":
                 robot.zigzag_navigation()
-                robot.set_mop(True)
-                robot.set_water_pump(config.PUMP_PULSE_DURATION)
                 
             elif robot.mode == "DOCKING":
                 robot.set_vacuum(False)
                 robot.set_sweeper(False)
-                robot.set_mop(False)
                 robot.docking_procedure()
                 
             elif robot.mode == "CHARGING":
