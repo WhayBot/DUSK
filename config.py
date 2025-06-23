@@ -4,10 +4,11 @@ VL53L0X_LEFT_XSHUT = 4      #XSHUT pin for left VL53L0X (active LOW for reset)
 VL53L0X_RIGHT_XSHUT = 17    #XSHUT pin for right VL53L0X
 IR_RECEIVER_LEFT = 22        #Left IR receiver output
 IR_RECEIVER_RIGHT = 23       #Right IR receiver output
-RELAY_VACUUM = 24            #Relay for vacuum motor (IN1)
-RELAY_SWEEPER = 25           #Relay for sweeper motor (IN2)
-RELAY_MOP = 26               #Relay for mop motor (IN3)
-RELAY_PUMP = 27              #Relay for water pump (IN4)
+
+#Motor Penyapu L298N kedua
+MOTOR_SWEEPER_IN1 = 24
+MOTOR_SWEEPER_IN2 = 25
+MOTOR_SWEEPER_ENA = 26
 
 #Motor Driver
 MOTOR_L_IN1 = 12             #L298N IN1 for left motor direction
