@@ -285,7 +285,7 @@ class DUSKController:
             time.sleep(0.05)
     
     def return_to_home(self):
-        """Kembali ke home (0,0) dengan odometri"""
+        """Return to Home (0,0) dengan odometri"""
         print("Starting RTH procedure...")
         last_update = time.time()
         
@@ -326,7 +326,7 @@ class DUSKController:
             time.sleep(0.01)
     
     def docking_procedure(self):
-        """Prosedur kembali ke docking station"""
+        ""Docking Procedure by Deepseek"""
         #try to find IR signal
         left_ir, right_ir = self.read_ir_docking()
         
