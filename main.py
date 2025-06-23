@@ -326,27 +326,27 @@ class DUSKController:
             time.sleep(0.01)
     
     def docking_procedure(self):
-        ""Docking Procedure by Deepseek"""
+        """Docking Procedure"""
         #try to find IR signal
         left_ir, right_ir = self.read_ir_docking()
         
         if left_ir or right_ir:
-            # Jika sinyal IR terdeteksi, gunakan metode berbasis IR
+            #if IR detected, switch to IR
             print("IR docking signal detected!")
             while self.mode == "DOCKING":
                 left_ir, right_ir = self.read_ir_docking()
                 
-                # Algoritma line-follow IR
+                #Line-Following IR Algorithm
                 if left_ir and right_ir:
-                    self.set_motor_speed(-0.4, -0.4)  # Mundur lurus
+                    self.set_motor_speed(-0.4, -0.4)  
                 elif left_ir:
-                    self.set_motor_speed(-0.2, -0.6)  # Koreksi kanan
+                    self.set_motor_speed(-0.2, -0.6)  
                 elif right_ir:
-                    self.set_motor_speed(-0.6, -0.2)  # Koreksi kiri
+                    self.set_motor_speed(-0.6, -0.2)  
                 else:
-                    self.set_motor_speed(0, 0)  # Berhenti jika sinyal hilang
+                    self.set_motor_speed(0, 0)  #stop if lost signal
                     
-                # Cek apakah sudah sampai dock
+                #checkin
                 left_dist, _ = self.read_distance_sensors()
                 if left_dist < config.DOCKING_DISTANCE:
                     self.set_motor_speed(0, 0)
@@ -355,49 +355,36 @@ class DUSKController:
                     
                 time.sleep(0.1)
         else:
-            # Jika tidak ada sinyal IR, gunakan RTH dengan odometri
+            #if no signal, use RTH with odometri
             self.return_to_home()
             self.mode = "CHARGING"
     
     def draw_eye(self, device, is_left_eye, state="open", offset_x=0, offset_y=0):
         """Eye Mechanism by Deepseek"""
         with canvas(device) as draw:
-            # Koordinat dan ukuran mata
             center_x = device.width // 2
             center_y = device.height // 2
             eye_radius = 25
-            
-            # Warna (putih untuk OLED monokrom)
             outline_color = "white"
             fill_color = "black"
-            
             if state == "sleep":
-                # Mata tidur (garis horizontal)
                 draw.arc((center_x - eye_radius, center_y - 5, 
                           center_x + eye_radius, center_y + 5), 
                          180, 360, fill=outline_color)
                 return
-            
-            # Gambar outline mata (elips)
             draw.ellipse((center_x - eye_radius, center_y - eye_radius, 
                           center_x + eye_radius, center_y + eye_radius), 
                          outline=outline_color, fill=fill_color)
-            
-            # Gambar iris (lingkaran lebih kecil)
             iris_radius = 15
             iris_x = center_x + offset_x
             iris_y = center_y + offset_y
             draw.ellipse((iris_x - iris_radius, iris_y - iris_radius, 
                           iris_x + iris_radius, iris_y + iris_radius), 
                          outline=outline_color, fill=outline_color)
-            
-            # Gambar pupil (lingkaran kecil)
             pupil_radius = 8
             draw.ellipse((iris_x - pupil_radius, iris_y - pupil_radius, 
                           iris_x + pupil_radius, iris_y + pupil_radius), 
                          outline=fill_color, fill=fill_color)
-            
-            # Gambar highlight kecil (untuk efek 3D)
             highlight_radius = 4
             highlight_x = iris_x - 6 + offset_x/2
             highlight_y = iris_y - 6 + offset_y/2
@@ -406,8 +393,6 @@ class DUSKController:
                           highlight_x + highlight_radius, 
                           highlight_y + highlight_radius), 
                          outline="white", fill="white")
-            
-            # Gambar kelopak mata jika sedang berkedip
             if state == "blink":
                 blink_height = 5
                 draw.rectangle((center_x - eye_radius, center_y - blink_height, 
@@ -415,44 +400,41 @@ class DUSKController:
                                fill=fill_color, outline=fill_color)
     
     def update_eye_animation(self):
-        """Mengupdate animasi mata berdasarkan mode dan waktu"""
+        """Animasi Mata"""
         current_time = time.time()
         
-        # Mode Charging: mata selalu tidur
+        #charging mode
         if self.mode == "CHARGING":
             self.draw_eye(oled_left, is_left_eye=True, state="sleep")
             self.draw_eye(oled_right, is_left_eye=False, state="sleep")
             return
         
-        # Mode Cleaning/Docking: animasi mata aktif
-        # Atur pergerakan mata secara acak
+        #cleaning mode
+        #atur pergerakan mata secara acak
         if current_time - self.last_eye_move_time > self.eye_move_interval:
             self.eye_offset_x = random.randint(-10, 10)
             self.eye_offset_y = random.randint(-5, 5)
             self.eye_move_interval = random.uniform(2, 5)
             self.last_eye_move_time = current_time
         
-        # Atur animasi berkedip
+        #atur animasi berkedip
         if current_time - self.last_blink_time > self.blink_interval:
-            self.blink_state = 1  # Mulai berkedip
+            self.blink_state = 1  
             self.last_blink_time = current_time
-            self.blink_interval = random.uniform(3, 8)  # Interval acak berikutnya
+            self.blink_interval = random.uniform(3, 8)  
         
-        # Proses animasi berkedip
+        #binking process
         if self.blink_state > 0:
             if self.blink_state == 1:
-                # Fase pertama: menutup mata
                 self.draw_eye(oled_left, is_left_eye=True, state="blink", 
                               offset_x=self.eye_offset_x, offset_y=self.eye_offset_y)
                 self.draw_eye(oled_right, is_left_eye=False, state="blink", 
                               offset_x=self.eye_offset_x, offset_y=self.eye_offset_y)
                 self.blink_state = 2
             elif self.blink_state == 2 and current_time - self.last_blink_time > 0.1:
-                # Fase kedua: membuka mata
                 self.eye_open = True
                 self.blink_state = 0
         else:
-            # Mata terbuka normal
             self.draw_eye(oled_left, is_left_eye=True, state="open", 
                           offset_x=self.eye_offset_x, offset_y=self.eye_offset_y)
             self.draw_eye(oled_right, is_left_eye=False, state="open", 
@@ -463,8 +445,6 @@ class DUSKController:
         self.set_motor_speed(0, 0)
         self.set_vacuum(False)
         self.set_sweeper(False)
-        
-        # Pastikan semua pin motor penyapu dimatikan
         GPIO.output(config.MOTOR_SWEEPER_IN1, GPIO.LOW)
         GPIO.output(config.MOTOR_SWEEPER_IN2, GPIO.LOW)
         pi.hardware_PWM(config.MOTOR_SWEEPER_ENA, 1000, 0)
@@ -483,15 +463,15 @@ if __name__ == "__main__":
         while True:
             current_time = time.time()
             
-            # Update status baterai
+            #battery status update
             voltage = robot.check_battery()
             
-            # Update sensor secara periodik
+            #sensor update
             if current_time - last_sensor_update > config.SENSOR_UPDATE_INTERVAL:
                 robot.update_odometry()
                 last_sensor_update = current_time
             
-            # Mode Operasi
+            #operation mode
             if robot.mode == "CLEANING":
                 robot.zigzag_navigation()
                 
@@ -510,19 +490,19 @@ if __name__ == "__main__":
                     robot.update_eye_animation()
                 robot.battery_low = False
                 robot.mode = "CLEANING"
-                # Reset odometri saat mulai cleaning baru
+                #reset odometri when start new cleaning session
                 robot.x, robot.y, robot.theta = 0.0, 0.0, 0.0
                 robot.left_encoder_count = 0
                 robot.right_encoder_count = 0
             
-            # Update animasi mata
+            #update eye animation
             robot.update_eye_animation()
             
-            # Update display status secara periodik
+            #update display status
             if current_time - last_display_update > config.DISPLAY_UPDATE_INTERVAL:
                 last_display_update = current_time
             
-            time.sleep(0.05)  #Loop rate ~20Hz
+            time.sleep(0.05)  #loop rate ~20Hz
             
     except KeyboardInterrupt:
         print("Stopping by user request...")
